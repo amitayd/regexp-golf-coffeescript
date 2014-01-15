@@ -1,5 +1,5 @@
 Set = require('./set')
-{flatten, max} = require('./utils')
+{flatten, max, topMax} = require('./utils')
 
 
 verify = (found, winners, losers) ->
@@ -66,33 +66,68 @@ findregex = (winners, losers) ->
   # Make a pool of regex components, then pick from them to cover winners.
 
   pool = regexComponents(winners, losers)
-  for i in [0..2]
-    cover = findRegexInner(winners, losers, pool, [])
-    found = cover.join('|');
+  covers = findRegexInner(winners, losers, pool)
+  foundRegexps = covers.map (cover) -> cover.join('|');
+  foundRegexps.sort (a,b) -> a.length - b.length
+  for found in foundRegexps.reverse()
     verify(found, winners, losers)
     console.log "Found:", found, found.length
   
-  return found
+  return foundRegexps
 
 ### 
 The actual recursive implementation of finding the regexp
 ###
-findRegexInner = (winners, losers, pool, cover) ->
+findRegexInner = (winners, losers, pool, depth) ->
   # On each iteration, add the 'best' component to 'cover',
   # remove winners covered by best, and keep in 'pool' only components
   # that still match some winner.
+  
+  depth ?= 1
+  covers = []
+
   if (winners.length() == 0) 
-    return
+    return [null]
 
   rankFunc = (c) -> 
-    3 * matches(c, winners).length() - c.length + Math.random() * 100
+    3 * matches(c, winners).length() - c.length + Math.random() * 1
 
-  best = max(pool.asArray(), rankFunc)
-  cover.push(best)
-  winnersUpdated = winners.subtract matches(best, winners)
-  poolUpdated = new Set(c for c of pool.set when matches(c, winners).length() > 0)
-  findRegexInner(winnersUpdated, losers, poolUpdated, cover)
-  return cover
+  #numBests = if winners.length() > 20 then 5 else 3
+  #numBests = Math.max(1, parseInt(20 / (depth*2 + 2), 10))
+  # numBests = if depth <= 1
+  #  1
+  # else if depth <= 5
+  #  3
+  # else 
+  #  10
+  #[gikuj]..n|a.[alt]|[pivo].l|i..o|[jocy]e|sh|di|oo 49
+  numBests = if depth <= 1
+   2
+  else if depth == 2
+   2
+  else 
+   2
+
+
+
+  bests =  if (numBests > 1)
+    topMax(pool.asArray(), rankFunc, numBests)
+  else
+    [max(pool.asArray(), rankFunc)]
+  console.log depth, numBests
+  for best in bests
+    
+    #console.log winners.length(), best
+    winnersUpdated = winners.subtract matches(best, winners)
+    poolUpdated = new Set(c for c of pool.set when matches(c, winnersUpdated).length() > 0)
+    innerCovers = findRegexInner(winnersUpdated, losers, poolUpdated, depth+1)
+    for innerCover in innerCovers
+      cover = [best].concat innerCover
+      #console.log(winners.length(), cover)
+      covers.push [best].concat (if innerCover? then innerCover else [])
+
+
+  return covers
 
 ###
 gets possible combined parts using character sets for a given input
@@ -108,8 +143,9 @@ getGroupedParts = (parts) ->
   for part of parts.set
     for charIndex in [0..(part.length - 1)]
       char = part[charIndex]
-      blanked = rmChar(part, charIndex)
-      (blankedParts[blanked] ||= {})[char] = true
+      if char != "$" and char != "^"
+        blanked = rmChar(part, charIndex)
+        (blankedParts[blanked] ||= {})[char] = true
 
   # Create all the the character sets permutations for the created blankedParts
   groupedParts = []
@@ -118,7 +154,7 @@ getGroupedParts = (parts) ->
     perms = getPermutations(lettersStr)
     for perm in perms
       # TODO: Yuck, do the escaping it in getPermutations?
-      perm = perm.replace('$', '\\$').replace('^', '\\^')
+      #perm = perm.replace('$', '\\$').replace('^', '\\^')
       if perm.length > 1
         groupedPart = blanked.replace("_", "[#{perm}]")
         groupedParts.push(groupedPart)
@@ -143,7 +179,6 @@ getPermutations = (str) ->
       tmp.push head + perm
       tmp.push perm
     return tmp
-
 
 module.exports = {
   find: findregex

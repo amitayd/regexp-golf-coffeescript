@@ -7,9 +7,25 @@ max = (arr, rankFunc) ->
   maxFound.element
 
 flatten = (a)->
-   a.reduce (l,r)->l.concat(r)
+  if a.length is 0
+    return []
+  else
+    return ( a.reduce (l,r)->l.concat(r) )
+
+
+topMax = (arr, rankFunc, numToReturn) ->
+  ranked = arr.map (el) -> {el: el, rank: rankFunc(el)}
+
+  ranked.sort (a, b) ->
+    b.rank - a.rank
+
+  return ranked[..numToReturn-1].map (el) -> el.el
 
 module.exports = {
   max: max
   flatten: flatten,
+  topMax: topMax
 }
+
+
+
