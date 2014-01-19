@@ -3,6 +3,8 @@ regexp-golf-coffeescript
 
 Regular expression golf (finding a short regexp for a set) implemented in coffeescript
 
+See blog post @ http://www.doboism.com/blog/2014/01/19/coffeescript-regex-golf
+
 ###How to run###
 
 Main Coffee under Node:
