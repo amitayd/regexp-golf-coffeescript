@@ -17,7 +17,10 @@ if require.main == module
 
   losers = losers.subtract winners
 
-  #a.[at]|i..[nodct]|j|oo|bu|n.e|ay.|ru|po|oe|di|nd$ can't remember how this was found
+  settings = {
+    randomFactor: 1
+    branches: 1
+    depthBranches: {}
+  }
 
-  found = regexpGolf.find(winners, losers)
-  #console.log "Found:", found, found.length
+  found = regexpGolf.find(winners, losers, settings)

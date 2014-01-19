@@ -1,7 +1,6 @@
 Set = require('./set')
 {flatten, max, topMax} = require('./utils')
 
-
 verify = (found, winners, losers) ->
   regexp = new RegExp(found)
   missedWinners = winner for winner of winners.set when not (regexp.test(winner))
@@ -14,14 +13,13 @@ verify = (found, winners, losers) ->
 
   return not (missedWinners or missedWinners)
 
-
 regexComponents = (winners, losers) ->
   "Return components that match at least one winner, but no loser."
   wholes = new Set('^'+winner+'$' for winner of winners.set)
   parts = []
-  for w of wholes.set
-    for p of subparts(w).set
-      for d of dotify(p).set
+  for w in wholes.arr
+    for p in subparts(w).arr
+      for d in dotify(p).arr
         if not matches(d, losers).length()
           parts.push d
 
@@ -41,7 +39,7 @@ dotify = (part) ->
   if part == ''
     new Set([''])
   else
-    new Set(flatten(c+rest for rest of dotify(part[1..]).set for c in replacements(part[0])))
+    new Set(flatten(c+rest for rest in dotify(part[1..]).arr for c in replacements(part[0])))
 
 ###Return possible replacement characters for char (char + '.' unless char is special).###
 replacements = (char) ->
@@ -52,9 +50,7 @@ replacements = (char) ->
 
 ###Return a set of all the strings that are matched by regex.###
 matches = (regex, strings) ->
-  set =  new Set(s for s of strings.set when (new RegExp(regex)).test(s))
-  set
-
+  new Set(s for s in strings.arr when (new RegExp(regex)).test(s))
 
 ### Replace a character at a given x with "_"###
 rmChar = (s, index) -> 
@@ -62,11 +58,15 @@ rmChar = (s, index) ->
 
 
 ###Find a regex that matches all winners but no losers (sets of strings).###
-findregex = (winners, losers) ->
-  # Make a pool of regex components, then pick from them to cover winners.
+findregex = (winners, losers, settings) ->
 
+  settings.branches ?= 1
+  settings.depthBranches ?= {}
+  settings.randomFactor ?= 1
+
+  # Make a pool of regex components, then find best covers
   pool = regexComponents(winners, losers)
-  covers = findRegexInner(winners, losers, pool)
+  covers = findRegexInner(winners, losers, pool, settings)
   foundRegexps = covers.map (cover) -> cover.join('|');
   foundRegexps.sort (a,b) -> a.length - b.length
   for found in foundRegexps.reverse()
@@ -77,55 +77,35 @@ findregex = (winners, losers) ->
 
 ### 
 The actual recursive implementation of finding the regexp
+Can return multiple covers path, since it supports generating
+a cover for multiple "bests".
 ###
-findRegexInner = (winners, losers, pool, depth) ->
-  # On each iteration, add the 'best' component to 'cover',
-  # remove winners covered by best, and keep in 'pool' only components
-  # that still match some winner.
-  
-  depth ?= 1
-  covers = []
+findRegexInner = (winners, losers, pool, settings, depth) ->
 
   if (winners.length() == 0) 
-    return [null]
+    return [[]]
 
-  rankFunc = (c) -> 
-    3 * matches(c, winners).length() - c.length + Math.random() * 1
-
-  #numBests = if winners.length() > 20 then 5 else 3
-  #numBests = Math.max(1, parseInt(20 / (depth*2 + 2), 10))
-  # numBests = if depth <= 1
-  #  1
-  # else if depth <= 5
-  #  3
-  # else 
-  #  10
-  #[gikuj]..n|a.[alt]|[pivo].l|i..o|[jocy]e|sh|di|oo 49
-  numBests = if depth <= 1
-   2
-  else if depth == 2
-   2
-  else 
-   2
-
-
-
-  bests =  if (numBests > 1)
-    topMax(pool.asArray(), rankFunc, numBests)
-  else
-    [max(pool.asArray(), rankFunc)]
+  depth ?= 1
+  numBests = settings.depthBranches[depth] ? settings.branches
   console.log depth, numBests
-  for best in bests
-    
-    #console.log winners.length(), best
-    winnersUpdated = winners.subtract matches(best, winners)
-    poolUpdated = new Set(c for c of pool.set when matches(c, winnersUpdated).length() > 0)
-    innerCovers = findRegexInner(winnersUpdated, losers, poolUpdated, depth+1)
-    for innerCover in innerCovers
-      cover = [best].concat innerCover
-      #console.log(winners.length(), cover)
-      covers.push [best].concat (if innerCover? then innerCover else [])
+  
+  covers = []
+  
+  rankFunc = (c) -> 
+    2.9 * matches(c, winners).length() - c.length + Math.random() * settings.randomFactor
 
+  bests = topMax(pool.asArray(), rankFunc, numBests)
+
+  for best in bests
+    # On each iteration, add a 'best' component to 'cover',
+    # remove winners covered by best, and keep in 'pool' only components
+    # that still match some winner, then compute the covers for the remaining 
+    # winners and pool, and concat the to the current part
+    winnersUpdated = winners.subtract matches(best, winners)
+    poolUpdated = new Set(c for c in pool.arr when matches(c, winnersUpdated).length() > 0)
+    innerCovers = findRegexInner(winnersUpdated, losers, poolUpdated, settings, depth+1)
+    for innerCover in innerCovers
+      covers.push [best].concat innerCover
 
   return covers
 
@@ -140,7 +120,7 @@ getGroupedParts = (parts) ->
   # that appear were blanked as its value, i.e.
   # {_mitay: {'A': true, 'B': true}}
   blankedParts = {}
-  for part of parts.set
+  for part in parts.arr
     for charIndex in [0..(part.length - 1)]
       char = part[charIndex]
       if char != "$" and char != "^"
