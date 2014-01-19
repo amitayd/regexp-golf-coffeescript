@@ -12,14 +12,17 @@ module.exports = function (grunt) {
         src: ['./browser/browserMain.coffee'],
         dest: './browser/browserMain.js'
       }
-
+    },
+    nodeunit: {
+      all: ['test/**/*Test.coffee']
     }
   });
 
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-coffeeify');
+  grunt.loadNpmTasks('grunt-contrib-nodeunit');
 
   // Default task.
-  grunt.registerTask('default', ['coffeeify']);
+  grunt.registerTask('default', ['nodeunit', 'coffeeify']);
 
 };

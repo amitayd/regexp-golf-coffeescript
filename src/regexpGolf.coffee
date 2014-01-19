@@ -59,10 +59,13 @@ rmChar = (s, index) ->
 
 ###Find a regex that matches all winners but no losers (sets of strings).###
 findregex = (winners, losers, settings) ->
-
+  settings ?= {}
   settings.branches ?= 1
   settings.depthBranches ?= {}
   settings.randomFactor ?= 1
+
+  if winners.intersection(losers).length() > 0
+    throw new Error("Winners should not intersect with losers")
 
   # Make a pool of regex components, then find best covers
   pool = regexComponents(winners, losers)

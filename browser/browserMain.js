@@ -267,6 +267,9 @@
 
   findregex = function(winners, losers, settings) {
     var covers, found, foundRegexps, pool, _i, _len, _ref1;
+    if (settings == null) {
+      settings = {};
+    }
     if (settings.branches == null) {
       settings.branches = 1;
     }
@@ -275,6 +278,9 @@
     }
     if (settings.randomFactor == null) {
       settings.randomFactor = 1;
+    }
+    if (winners.intersection(losers).length() > 0) {
+      throw new Error("Winners should not intersect with losers");
     }
     pool = regexComponents(winners, losers);
     covers = findRegexInner(winners, losers, pool, settings);
