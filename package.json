@@ -1,0 +1,32 @@
+{
+  "name": "regexp-golf-coffeescript",
+  "version": "0.1.0",
+  "description": "A solver for regular expressions golf using coffeescript",
+  "main": "main.js",
+  "dependencies": {
+    "profiler": "~1.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/amitayd/regexp-golf-coffeescript.git"
+  },
+  "keywords": [
+    "coffeescript",
+    "regexp",
+    "golf",
+    "regular",
+    "expressions",
+    "regex"
+  ],
+  "author": "Amitay Dobo",
+  "license": "MIT",
+  "gitHead": "b1878d5f5ed9d6ba93376386eec6a7fe99b923ac",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/amitayd/regexp-golf-coffeescript/issues"
+  }
+}
