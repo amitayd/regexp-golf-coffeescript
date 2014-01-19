@@ -30,6 +30,9 @@ open browser/index.html
 
 ### Test and build ###
 
-Install grunt-cli, and run
+Install grunt-cli and the package
+
+    sudo npm install -g grunt-cli
+    npm install .
 
     grunt
