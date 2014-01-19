@@ -6,7 +6,10 @@
   "dependencies": {
     "profiler": "~1.2.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-coffeeify": "~0.1.3"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

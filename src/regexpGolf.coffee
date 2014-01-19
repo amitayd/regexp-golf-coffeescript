@@ -1,5 +1,5 @@
-Set = require('./set')
-{flatten, max, topMax} = require('./utils')
+Set = require('./set.coffee')
+{flatten, max, topMax} = require('./utils.coffee')
 
 verify = (found, winners, losers) ->
   regexp = new RegExp(found)

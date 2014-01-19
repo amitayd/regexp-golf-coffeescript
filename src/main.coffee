@@ -1,5 +1,5 @@
-Set = require('./set')
-regexpGolf = require('./regexpGolf')
+Set = require('./set.coffee')
+regexpGolf = require('./regexpGolf.coffee')
 
 if require.main == module
   winners =  new Set('washington adams jefferson jefferson madison madison monroe monroe adams jackson jackson vanburen harrison polk taylor pierce buchanan
